@@ -21,7 +21,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from skimage.util import img_as_ubyte
 
-def extract_outlier_frames(config,videos,videotype='avi',shuffle=1,trainingsetindex=0,outlieralgorithm='jump',comparisonbodyparts='all',epsilon=20,p_bound=.01,ARdegree=3,MAdegree=1,alpha=.01,extractionalgorithm='kmeans',automatic=False,cluster_resizewidth=30,cluster_color=False,opencv=True,savelabeled=True, destfolder=None):
+def extract_outlier_frames(config,videos,videotype='avi',shuffle=1,trainingsetindex=0,outlieralgorithm='jump',comparisonbodyparts='all',epsilon=20,p_bound=.01,ARdegree=3,MAdegree=1,alpha=.01,extractionalgorithm='kmeans',automatic=False,cluster_resizewidth=30,cluster_color=False,opencv=True,savelabeled=True, destfolder=None, anipose=False):
     """
     Extracts the outlier frames in case, the predictions are not correct for a certain video from the cropped video running from
     start to stop as defined in config.yaml.
@@ -127,9 +127,16 @@ def extract_outlier_frames(config,videos,videotype='avi',shuffle=1,trainingsetin
       else:
             videofolder=destfolder
       
-      dataname = str(Path(video).stem)+scorer
       try:
-          Dataframe = pd.read_hdf(os.path.join(videofolder,dataname+'.h5'))
+          if anipose:
+              # load from default anipose results directory (pose-2d subfolder in experiment of interest)
+              dataname = str(Path(video).stem)
+              h5_file = os.path.join(os.path.dirname(videofolder),'pose-2d',dataname+'.h5')
+          else:
+              dataname = str(Path(video).stem)+scorer
+              h5_file = os.path.join(videofolder, dataname+'.h5')
+          
+          Dataframe = pd.read_hdf(h5_file)
           nframes=np.size(Dataframe.index)
           #extract min and max index based on start stop interval.
           startindex=max([int(np.floor(nframes*cfg['start'])),0])
